@@ -12,6 +12,11 @@
   
   "plugins": {
     "shell": {
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["watery", "mailto"]
+      }
     }
   },
   
