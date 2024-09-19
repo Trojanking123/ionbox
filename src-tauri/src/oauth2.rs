@@ -87,7 +87,7 @@ impl Oauth2Client {
             .redirect(reqwest::redirect::Policy::none())
             .build()
             .expect("Client should build");
-        
+
         let token_result = match self.csrf {
             true => {
                 self.client
@@ -114,7 +114,7 @@ impl Oauth2Client {
 pub fn read_oauth2_vendor() -> HashMap<String, Oauth2Cfg> {
     let mut oauth2_map = HashMap::new();
     let oauth2_cfg = include_str!("oauth2.json");
-    let oauth2_cfg: Vec<Oauth2Cfg> = serde_json::from_str(&oauth2_cfg).unwrap();
+    let oauth2_cfg: Vec<Oauth2Cfg> = serde_json::from_str(oauth2_cfg).unwrap();
     let _: Vec<Option<Oauth2Cfg>> = oauth2_cfg
         .into_iter()
         .map(|oauth2| oauth2_map.insert(oauth2.key.clone(), oauth2))
@@ -130,6 +130,6 @@ mod test {
     fn test_add() {
         let result = read_oauth2_vendor();
         let google_oauth2 = result.get("gmail").unwrap();
-        assert_eq!(google_oauth2.csrf, true);
+        assert!(google_oauth2.csrf);
     }
 }
