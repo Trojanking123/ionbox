@@ -25,3 +25,4 @@ dist-ssr
 
 src-tauri/target
 src/components/ui
+*.min.js

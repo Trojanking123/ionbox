@@ -1,19 +1,13 @@
-use std::borrow::BorrowMut;
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 use std::collections::HashMap;
-use std::error::Error;
-use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
-use std::{error, thread};
 
-use tauri::AppHandle;
-use tauri::State;
+use serde::{Deserialize, Serialize};
 use tauri::Listener;
+use tauri::State;
 use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
-use serde::{Deserialize, Deserializer, Serialize};
-use serde::Serializer;
 
 use tokio::sync::broadcast;
 use tokio::task;
@@ -34,8 +28,7 @@ struct Payload {
     cwd: String,
 }
 
-#[derive(Default)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 struct GoogleResp {
     access_token: String,
     expires_in: i32,
@@ -55,9 +48,8 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-
 #[tauri::command]
-async fn new_server( state: State<'_, Arc<Mutex<AppState>>>) -> Result<(), String > {
+async fn new_server(state: State<'_, Arc<Mutex<AppState>>>) -> Result<(), String> {
     let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
 
     let mut state = state.lock().unwrap();
@@ -93,9 +85,12 @@ async fn new_server( state: State<'_, Arc<Mutex<AppState>>>) -> Result<(), Strin
                     println!("res: {:?}, res", res);
                     accese_token = res.access_token;
                     refresh_token = res.refresh_token;
-                    
                 }
-                let redirect_uri = Uri::from_str(format!("watery://accese_token={accese_token}&refresh_token={refresh_token}").as_str()).unwrap();
+                let redirect_uri = Uri::from_str(
+                    format!("watery://accese_token={accese_token}&refresh_token={refresh_token}")
+                        .as_str(),
+                )
+                .unwrap();
                 //Ok(warp::redirect::temporary(redirect_uri))
                 Ok(warp::redirect::temporary(redirect_uri)) as Result<_, warp::Rejection>
             }
@@ -118,7 +113,6 @@ async fn new_server( state: State<'_, Arc<Mutex<AppState>>>) -> Result<(), Strin
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-
     let state = Arc::new(Mutex::new(AppState::default()));
     let mut app_builder = tauri::Builder::default();
     #[cfg(desktop)]
