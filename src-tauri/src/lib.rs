@@ -4,15 +4,17 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use serde::{Deserialize, Serialize};
+use tauri::Emitter;
 use tauri::Listener;
 use tauri::State;
-use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 
 use tokio::sync::broadcast;
 use tokio::task;
 use warp::http::Uri;
 use warp::Filter;
+
+mod oauth2;
 
 const PORT: u16 = 8080;
 
