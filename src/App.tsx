@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button"
+import { onOpenUrl } from '@tauri-apps/plugin-deep-link';
+
 import "./styles.css";
 import {
   Card,
@@ -17,6 +19,11 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
+
+
+await onOpenUrl((urls) => {
+  console.log('deep link:', urls);
+});
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
