@@ -5364,9 +5364,9 @@ version = "0.1.0"
 dependencies = [
  "cfg_aliases 0.2.1",
  "futures",
- "http 1.1.0",
  "log",
  "oauth2",
+ "parking_lot",
  "reqwest",
  "serde",
  "serde_json",
@@ -5376,6 +5376,7 @@ dependencies = [
  "tauri-plugin-log",
  "tauri-plugin-shell",
  "tauri-plugin-single-instance",
+ "thiserror",
  "tokio",
  "warp",
 ]

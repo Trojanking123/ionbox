@@ -7,7 +7,7 @@ use oauth2::basic::*;
 use oauth2::*;
 
 #[derive(Deserialize, Debug)]
-struct Oauth2Cfg {
+pub struct Oauth2Cfg {
     pub key: String,
     pub vendor: String,
     pub client_id: ClientId,
@@ -22,13 +22,13 @@ struct Oauth2Cfg {
 type MyClient =
     BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet>;
 
-struct Oauth2Client {
+pub struct Oauth2Client {
     client: MyClient,
     scopes: Vec<Scope>,
     csrf: bool,
     verifier: Option<PkceCodeVerifier>,
-    access_token: Option<String>,
-    refresh_token: Option<String>,
+    access_token: Option<AccessToken>,
+    refresh_token: Option<RefreshToken>,
 }
 
 impl From<Oauth2Cfg> for Oauth2Client {
@@ -51,7 +51,7 @@ impl From<Oauth2Cfg> for Oauth2Client {
 }
 
 impl Oauth2Client {
-    fn get_auth_url(&mut self) -> Url {
+    pub fn get_auth_url(&mut self) -> Url {
         let (auth_url, _) = match self.csrf {
             true => {
                 let (challenge, verifier) = PkceCodeChallenge::new_random_sha256();
@@ -71,11 +71,11 @@ impl Oauth2Client {
         auth_url
     }
 
-    async fn get_token(
+    pub async fn get_token(
         &mut self,
         auth_code: String,
         proxy: Option<String>,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    ) -> Result<AccessToken, Box<dyn std::error::Error>> {
         let auth_code = AuthorizationCode::new(auth_code);
         let mut http_client = reqwest::ClientBuilder::new();
         if let Some(proxy) = proxy {
@@ -104,10 +104,37 @@ impl Oauth2Client {
                     .await?
             }
         };
-        let access_token = token_result.access_token().secret().to_owned();
-        self.access_token = Some(access_token.clone());
-        self.refresh_token = Some(token_result.refresh_token().unwrap().secret().to_owned());
-        Ok(access_token)
+        let access_token = token_result.access_token();
+        self.access_token = Some(access_token.to_owned());
+        self.refresh_token = token_result.refresh_token().cloned();
+        Ok(access_token.to_owned())
+    }
+
+    pub async fn refresh_token(
+        &mut self,
+        proxy: Option<String>,
+    ) -> Result<AccessToken, Box<dyn std::error::Error>> {
+        let mut http_client = reqwest::ClientBuilder::new();
+        if let Some(proxy) = proxy {
+            let proxy = reqwest::Proxy::https(proxy).unwrap();
+            http_client = http_client.proxy(proxy);
+        };
+        // Following redirects opens the client up to SSRF vulnerabilities.
+        let http_client = http_client
+            .redirect(reqwest::redirect::Policy::none())
+            .build()
+            .expect("Client should build");
+        let token_result = self
+            .client
+            .exchange_refresh_token(self.refresh_token.as_ref().unwrap())
+            .request_async(&http_client)
+            .await?;
+        let access_token = token_result.access_token();
+        self.access_token = Some(access_token.to_owned());
+        if let Some(refresh_token) = token_result.refresh_token() {
+            self.refresh_token = Some(refresh_token.to_owned())
+        }
+        Ok(access_token.to_owned())
     }
 }
 

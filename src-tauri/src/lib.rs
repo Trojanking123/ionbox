@@ -1,7 +1,9 @@
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+mod oauth2;
+mod watery_error;
+
 use std::collections::HashMap;
+use std::ops::Deref;
 use std::str::FromStr;
-use std::sync::{Arc, Mutex};
 
 use serde::{Deserialize, Serialize};
 use tauri::Emitter;
@@ -9,12 +11,15 @@ use tauri::Listener;
 use tauri::State;
 use tauri_plugin_deep_link::DeepLinkExt;
 
+use parking_lot::Mutex;
+use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio::task;
 use warp::http::Uri;
 use warp::Filter;
 
-mod oauth2;
+use oauth2::*;
+use watery_error::*;
 
 const PORT: u16 = 8080;
 
@@ -45,16 +50,49 @@ struct AppState {
     shutdown_tx: Option<broadcast::Sender<()>>,
 }
 
+#[derive(Default)]
+struct Oauth2State {
+    inner: Mutex<HashMap<String, Oauth2Client>>,
+}
+
+impl Deref for Oauth2State {
+    type Target = Mutex<HashMap<String, Oauth2Client>>;
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl Oauth2State {
+    fn from_config(cfg: HashMap<String, Oauth2Cfg>) -> Self {
+        let mut map: HashMap<String, Oauth2Client> = HashMap::new();
+        let _: Vec<Option<Oauth2Client>> = cfg
+            .into_iter()
+            .map(|(key, value)| map.insert(key, value.into()))
+            .collect();
+        Oauth2State {
+            inner: Mutex::new(map),
+        }
+    }
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
 #[tauri::command]
+fn get_vendor_link(vendor: String, auth: State<Oauth2State>) -> WateryResult<String> {
+    let mut auth = auth.lock();
+    let client = auth.get_mut(&vendor).ok_or(WateryError::NoSuchVendor)?;
+    let url = client.get_auth_url();
+    Ok(url.to_string())
+}
+
+#[tauri::command]
 async fn new_server(state: State<'_, Arc<Mutex<AppState>>>) -> Result<(), String> {
     let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
 
-    let mut state = state.lock().unwrap();
+    let mut state = state.lock();
 
     let login_route = warp::path("login")
         .map(|| warp::redirect::temporary(Uri::from_static("https://oauth2-provider.com/auth")));
@@ -116,6 +154,10 @@ async fn new_server(state: State<'_, Arc<Mutex<AppState>>>) -> Result<(), String
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let state = Arc::new(Mutex::new(AppState::default()));
+
+    let oauth2_cfg = read_oauth2_vendor();
+    let oauth2_state = Oauth2State::from_config(oauth2_cfg);
+
     let mut app_builder = tauri::Builder::default();
     #[cfg(desktop)]
     {
@@ -126,9 +168,25 @@ pub fn run() {
         }));
     }
 
+    let log_plugin = tauri_plugin_log::Builder::new()
+        .target(tauri_plugin_log::Target::new(
+            tauri_plugin_log::TargetKind::Stdout,
+        ))
+        .target(tauri_plugin_log::Target::new(
+            tauri_plugin_log::TargetKind::LogDir {
+                file_name: Some("watery.log".to_string()),
+            },
+        ))
+        .level(log::LevelFilter::Debug)
+        .max_file_size(50 * 1024 * 1024 /* bytes */)
+        .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
+        .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+        .build();
+
     app_builder
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(log_plugin)
         .setup(|app| {
             // ensure deep links are registered on the system
             // this is useful because AppImages requires additional setup to be available in the system
@@ -147,6 +205,7 @@ pub fn run() {
             Ok(())
         })
         .manage(state)
+        .manage(oauth2_state)
         .invoke_handler(tauri::generate_handler![greet, new_server])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
