@@ -1,13 +1,12 @@
 [
 	{
-		"key": "gmail",
-		"vendor": "Gmail Inc",
+		"provider": "Gmail Inc",
 		"client_id": "632451831672-mfg1ol2lofb8ntf9og1eblkmgc81hv70.apps.googleusercontent.com",
 		"client_secret": "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",
 		"auth_url": "https://accounts.google.com/o/oauth2/auth",
 		"token_url": "https://oauth2.googleapis.com/token",
 		"redirect_url": "http://localhost:8080/callback",
 		"scopes": ["https://mail.google.com"],
-		"csrf": true
+		"csrf": false
 	}
 ]

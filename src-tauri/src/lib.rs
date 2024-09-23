@@ -1,8 +1,11 @@
+mod localhost;
 mod oauth2;
+mod watery_config;
 mod watery_error;
+mod watery_states;
+mod watery_const;
 
 use std::collections::HashMap;
-use std::ops::Deref;
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
@@ -12,17 +15,18 @@ use tauri::State;
 use tauri_plugin_deep_link::DeepLinkExt;
 
 use parking_lot::Mutex;
+use watery_config::WateryConfig;
 use std::sync::Arc;
 use tokio::sync::broadcast;
-use tokio::task;
 use warp::http::Uri;
 use warp::Filter;
 
-use oauth2::*;
-use watery_error::*;
+pub use oauth2::*;
+pub use watery_error::*;
+pub use watery_states::*;
+pub use watery_const::*;
 
 const PORT: u16 = 8080;
-
 const GOOGLE_CLIENT_ID: &str =
     "632451831672-mfg1ol2lofb8ntf9og1eblkmgc81hv70.apps.googleusercontent.com";
 const GOOGLE_CLIENT_SECRET: &str = "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";
@@ -44,48 +48,20 @@ struct GoogleResp {
     token_type: String,
 }
 
-#[derive(Default)]
-struct AppState {
-    server_handle: Option<task::JoinHandle<()>>,
-    shutdown_tx: Option<broadcast::Sender<()>>,
-}
-
-#[derive(Default)]
-struct Oauth2State {
-    inner: Mutex<HashMap<String, Oauth2Client>>,
-}
-
-impl Deref for Oauth2State {
-    type Target = Mutex<HashMap<String, Oauth2Client>>;
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl Oauth2State {
-    fn from_config(cfg: HashMap<String, Oauth2Cfg>) -> Self {
-        let mut map: HashMap<String, Oauth2Client> = HashMap::new();
-        let _: Vec<Option<Oauth2Client>> = cfg
-            .into_iter()
-            .map(|(key, value)| map.insert(key, value.into()))
-            .collect();
-        Oauth2State {
-            inner: Mutex::new(map),
-        }
-    }
-}
-
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[tauri::command]
-fn get_vendor_link(vendor: String, auth: State<Oauth2State>) -> WateryResult<String> {
+fn get_provider_link(
+    provider: String,
+    auth: State<Oauth2State>,
+) -> WateryResult<(String, String, Option<String>)> {
+    let provider: WateryOauth2Provider = provider.into();
     let mut auth = auth.lock();
-    let client = auth.get_mut(&vendor).ok_or(WateryError::NoSuchVendor)?;
-    let url = client.get_auth_url();
-    Ok(url.to_string())
+    let client = auth.get_mut(&provider).ok_or(WateryError::NoSuchProvider)?;
+    let (url, csrf_token, veri) = client.get_auth_url();
+    Ok((
+        url.to_string(),
+        csrf_token.into_secret(),
+        veri.map(|v| v.into_secret()),
+    ))
 }
 
 #[tauri::command]
@@ -155,8 +131,20 @@ async fn new_server(state: State<'_, Arc<Mutex<AppState>>>) -> Result<(), String
 pub fn run() {
     let state = Arc::new(Mutex::new(AppState::default()));
 
-    let oauth2_cfg = read_oauth2_vendor();
+    let oauth2_cfg = {
+        let mut oauth2_map = HashMap::new();
+        let oauth2_cfg = include_str!("oauth2.json");
+        let oauth2_cfg: Vec<WateryOauth2Cfg> = serde_json::from_str(oauth2_cfg).unwrap();
+        let _: Vec<Option<WateryOauth2Cfg>> = oauth2_cfg
+            .into_iter()
+            .map(|oauth2| oauth2_map.insert(oauth2.provider.clone(), oauth2))
+            .collect();
+        oauth2_map
+    };
     let oauth2_state = Oauth2State::from_config(oauth2_cfg);
+
+    let cfg = WateryConfig::read_from_file(CONFIG_PATH).unwrap();
+    let cfg_state = WateryConfigState::from(cfg);
 
     let mut app_builder = tauri::Builder::default();
     #[cfg(desktop)]
@@ -202,11 +190,13 @@ pub fn run() {
                 dbg!("--------");
                 dbg!(url);
             });
+            tauri::async_runtime::spawn(async {});
             Ok(())
         })
         .manage(state)
         .manage(oauth2_state)
-        .invoke_handler(tauri::generate_handler![greet, new_server])
+        .manage(cfg_state)
+        .invoke_handler(tauri::generate_handler![get_provider_link, new_server])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
