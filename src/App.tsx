@@ -30,7 +30,9 @@ function App() {
 	}
 
 	return (
+		
 		<div className="container">
+			<p>fsadfadsfafadfasf</p>
 			<h1>Welcome to Tauri!</h1>
 
 			<form

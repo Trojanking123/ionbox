@@ -1,6 +1,6 @@
 [
 	{
-		"provider": "Gmail Inc",
+		"provider": "Google",
 		"client_id": "632451831672-mfg1ol2lofb8ntf9og1eblkmgc81hv70.apps.googleusercontent.com",
 		"client_secret": "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",
 		"auth_url": "https://accounts.google.com/o/oauth2/auth",

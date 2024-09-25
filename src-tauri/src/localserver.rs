@@ -1,7 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
 use axum::{
-    debug_handler,
     extract::{Query, State},
     response::Redirect,
     routing::post, Router,
@@ -33,8 +32,8 @@ pub async fn local_server(cfg: WateryConfigState) {
 
     // build our application with a route
     let app = Router::new()
-        .route("register", post(register))
-        .route("callback", post(auth))
+        .route("/register", post(register))
+        .route("/callback", post(auth))
         .with_state(app_state);
 
     // run our app with hyper, listening globally on port 3000
@@ -42,7 +41,6 @@ pub async fn local_server(cfg: WateryConfigState) {
     axum::serve(listener, app).await.unwrap();
 }
 
-#[debug_handler]
 async fn register(
     Query(params): Query<HashMap<String, String>>,
     State(app_state): State<Arc<Mutex<LocalState>>>,
@@ -58,7 +56,7 @@ async fn register(
     app_sate.db.insert(state, value);
 }
 
-#[debug_handler]
+
 async fn auth(
     Query(params): Query<HashMap<String, String>>,
     State(app_state): State<Arc<Mutex<LocalState>>>,
