@@ -3,8 +3,8 @@
 
 use cfg_aliases::cfg_aliases;
 
-#[tokio::main]
-async fn main() {
+
+fn main() {
     cfg_aliases! {
         desktop: {any(targetos = "linux", targetos = "macos", targetos="windows")},
     }

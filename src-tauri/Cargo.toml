@@ -2,7 +2,7 @@
 name = "watery"
 version = "0.1.0"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["Trojanking"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -17,8 +17,12 @@ tauri-build = { version = "2.0.0-rc", features = [] }
 [dependencies]
 tauri = { version = "2.0.0-rc", features = [] }
 tauri-plugin-shell = "2.0.0-rc"
-tauri-plugin-deep-link = "2.0.0-rc"
+tauri-plugin-deep-link = "2.0.0-rc.6"
 tauri-plugin-log = "2.0.0-rc"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = { version = "2.0.0-rc", features = ["deep-link"] }
+
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 semver = { version = "1.0.23", features = ["serde"] }
@@ -32,5 +36,4 @@ futures = "0.3"
 tokio = { version = "1.40.0", features = ["full"] }
 reqwest = { version = "0.12", features = ["json", "socks"] }
 
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-single-instance = { version = "2.0.0-rc", features = ["deep-link"] }
+

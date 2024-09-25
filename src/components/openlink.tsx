@@ -5,7 +5,6 @@ import type React from "react";
 const OpenLink: React.FC = () => {
 	// 为 url 参数指定类型
 	const openInBrowser = async (url: string): Promise<void> => {
-		await invoke("new_server", {});
 		await open(url);
 	};
 

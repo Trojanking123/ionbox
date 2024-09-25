@@ -16,8 +16,8 @@ import {
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-await onOpenUrl((urls) => {
-	console.log("deep link:", urls);
+onOpenUrl((urls) => {
+	console.log("web deep link:", urls);
 });
 
 function App() {

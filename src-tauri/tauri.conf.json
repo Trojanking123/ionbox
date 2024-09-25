@@ -13,7 +13,7 @@
 		"shell": {},
 		"deep-link": {
 			"desktop": {
-				"schemes": ["watery", "mailto"]
+				"schemes": ["watery", "mailto", "kkkk", "aaaa"]
 			}
 		}
 	},

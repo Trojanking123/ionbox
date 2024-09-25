@@ -55,45 +55,6 @@ fn get_provider_link(
     ))
 }
 
-// #[tauri::command]
-// async fn new_server(app_state: State<'_, Arc<Mutex<AppState>>>, cfg_state: State<'_, WateryConfigState>) -> Result<(), String> {
-//     let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
-
-//     let mut state = app_state.lock();
-//     let cfg_state = cfg_state.read();
-//     let proxy = cfg_state.proxy.clone();
-
-//     let login_route = warp::path("login")
-//         .map(|| warp::redirect::temporary(Uri::from_static("https://oauth2-provider.com/auth")));
-
-//     let callback_route = warp::path("callback")
-//         .and(warp::query::<HashMap<String, String>>())
-//         .and_then(move |params: HashMap<String, String>| {
-//             let proxy = reqwest::Proxy::https("http://127.0.0.1:10006").unwrap();
-//             let client = reqwest::Client::builder().proxy(proxy).build().unwrap();
-//             let mut accese_token = String::new();
-//             let mut refresh_token = String::new();
-//             async move {
-
-//                 Ok(warp::redirect::temporary("aaa")) as Result<_, warp::Rejection>;
-//                 unimplemented!()
-//             }
-//         });
-
-//     let routes = login_route.or(callback_route);
-
-//     let (addr, server) =
-//         warp::serve(routes).bind_with_graceful_shutdown(([127, 0, 0, 1], PORT), async move {
-//             shutdown_rx.recv().await.ok(); // 等待关闭信号
-//         });
-
-//     let handle = tokio::task::spawn(server);
-
-//     state.server_handle = Some(handle);
-//     state.shutdown_tx = Some(shutdown_tx);
-//     println!("bind addr {addr} ok...");
-//     Ok(())
-// }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -136,7 +97,7 @@ pub fn run() {
                 file_name: Some("watery.log".to_string()),
             },
         ))
-        .level(log::LevelFilter::Debug)
+        .level(log::LevelFilter::Trace)
         .max_file_size(50 * 1024 * 1024 /* bytes */)
         .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
@@ -150,16 +111,12 @@ pub fn run() {
             // ensure deep links are registered on the system
             // this is useful because AppImages requires additional setup to be available in the system
             // and calling register() makes the deep links immediately available - without any user input
-            #[cfg(target_os = "linux")]
-            {
-                use tauri_plugin_deep_link::DeepLinkExt;
-                app.deep_link().register_all()?;
-            }
 
-            app.deep_link().register("watery")?;
+            app.deep_link().register_all()?;
             app.listen("single-instance", |url| {
-                info!("{:?}", url);
+                info!("--------------{:?}", url);
             });
+
             tauri::async_runtime::spawn(async {});
             Ok(())
         })
