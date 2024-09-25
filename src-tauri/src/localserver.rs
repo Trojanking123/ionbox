@@ -33,8 +33,8 @@ pub async fn local_server(cfg: WateryConfigState) {
 
     // build our application with a route
     let app = Router::new()
-        .route("register", post(register))
-        .route("callback", post(auth))
+        .route("/register", post(register))
+        .route("/callback", post(auth))
         .with_state(app_state);
 
     // run our app with hyper, listening globally on port 3000

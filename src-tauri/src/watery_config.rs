@@ -11,8 +11,7 @@ use tauri::Url;
 use serde::{Deserialize, Serialize};
 
 use crate::WateryResult;
-
-const DEFAULT_DATA_VERSION: Version = Version::new(0, 0, 1);
+use crate::DEFAULT_DATA_VERSION;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct WateryConfig {
