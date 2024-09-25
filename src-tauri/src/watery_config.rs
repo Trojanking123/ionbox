@@ -1,8 +1,10 @@
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Write};
 use std::path::Path;
+use std::sync::Arc;
 
 use log::info;
+use parking_lot::RwLock;
 use semver::Version;
 use tauri::Url;
 
@@ -28,11 +30,10 @@ impl Default for WateryConfig {
 }
 
 impl WateryConfig {
-
     pub fn get_ver(&self) -> &Version {
         &self.data_version
     }
-    
+
     pub fn read_from_file<P: AsRef<Path>>(file_path: P) -> WateryResult<Self> {
         // 尝试打开文件
         let file = OpenOptions::new().read(true).open(&file_path);
@@ -83,3 +84,5 @@ impl WateryConfig {
         Ok(())
     }
 }
+
+pub type WateryConfigWrap = Arc<RwLock<WateryConfig>>;

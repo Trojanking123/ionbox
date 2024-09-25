@@ -1,10 +1,13 @@
+use parking_lot::Mutex;
+use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::ops::Deref;
-use parking_lot::Mutex;
+use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio::task;
 
 use crate::watery_config::WateryConfig;
+use crate::watery_config::WateryConfigWrap;
 use crate::WateryOauth2Cfg;
 use crate::WateryOauth2Client;
 use crate::WateryOauth2Provider;
@@ -40,14 +43,19 @@ impl Oauth2State {
     }
 }
 
-
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct WateryConfigState {
-    inner: Mutex<WateryConfig>,
+    inner: WateryConfigWrap,
+}
+
+impl WateryConfigState {
+    pub fn inner_clone(&self) -> WateryConfigWrap {
+        self.inner.clone()
+    }
 }
 
 impl Deref for WateryConfigState {
-    type Target = Mutex<WateryConfig>;
+    type Target = WateryConfigWrap;
     fn deref(&self) -> &Self::Target {
         &self.inner
     }
@@ -56,7 +64,7 @@ impl Deref for WateryConfigState {
 impl From<WateryConfig> for WateryConfigState {
     fn from(cfg: WateryConfig) -> WateryConfigState {
         WateryConfigState {
-            inner: Mutex::new(cfg)
+            inner: Arc::new(RwLock::new(cfg)),
         }
     }
 }

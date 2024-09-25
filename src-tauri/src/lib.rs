@@ -1,13 +1,13 @@
-mod localhost;
+mod localserver;
 mod oauth2;
 mod watery_config;
+mod watery_const;
 mod watery_error;
 mod watery_states;
-mod watery_const;
 
 use std::collections::HashMap;
-use std::str::FromStr;
 
+use log::info;
 use serde::{Deserialize, Serialize};
 use tauri::Emitter;
 use tauri::Listener;
@@ -15,23 +15,14 @@ use tauri::State;
 use tauri_plugin_deep_link::DeepLinkExt;
 
 use parking_lot::Mutex;
-use watery_config::WateryConfig;
 use std::sync::Arc;
-use tokio::sync::broadcast;
-use warp::http::Uri;
-use warp::Filter;
+use watery_config::WateryConfig;
 
+pub use localserver::*;
 pub use oauth2::*;
+pub use watery_const::*;
 pub use watery_error::*;
 pub use watery_states::*;
-pub use watery_const::*;
-
-const PORT: u16 = 8080;
-const GOOGLE_CLIENT_ID: &str =
-    "632451831672-mfg1ol2lofb8ntf9og1eblkmgc81hv70.apps.googleusercontent.com";
-const GOOGLE_CLIENT_SECRET: &str = "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";
-const GOOGLE_REDIRECT_URI: &str = "http://localhost:8080/callback";
-const GOOGLE_AUTH_URL: &str = "https://oauth2.googleapis.com/token";
 
 #[derive(Clone, Serialize)]
 struct Payload {
@@ -64,68 +55,45 @@ fn get_provider_link(
     ))
 }
 
-#[tauri::command]
-async fn new_server(state: State<'_, Arc<Mutex<AppState>>>) -> Result<(), String> {
-    let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
+// #[tauri::command]
+// async fn new_server(app_state: State<'_, Arc<Mutex<AppState>>>, cfg_state: State<'_, WateryConfigState>) -> Result<(), String> {
+//     let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
 
-    let mut state = state.lock();
+//     let mut state = app_state.lock();
+//     let cfg_state = cfg_state.read();
+//     let proxy = cfg_state.proxy.clone();
 
-    let login_route = warp::path("login")
-        .map(|| warp::redirect::temporary(Uri::from_static("https://oauth2-provider.com/auth")));
+//     let login_route = warp::path("login")
+//         .map(|| warp::redirect::temporary(Uri::from_static("https://oauth2-provider.com/auth")));
 
-    let callback_route = warp::path("callback")
-        .and(warp::query::<HashMap<String, String>>())
-        .and_then(move |params: HashMap<String, String>| {
-            let proxy = reqwest::Proxy::https("http://127.0.0.1:10006").unwrap();
-            let client = reqwest::Client::builder().proxy(proxy).build().unwrap();
-            let mut accese_token = String::new();
-            let mut refresh_token = String::new();
-            async move {
-                if let Some(token) = params.get("code") {
-                    println!("{token}");
-                    let form = [
-                        ("client_id", GOOGLE_CLIENT_ID),
-                        ("client_secret", GOOGLE_CLIENT_SECRET),
-                        ("code", token),
-                        ("redirect_uri", GOOGLE_REDIRECT_URI),
-                        ("grant_type", "authorization_code"),
-                    ];
-                    let resp = client
-                        .post(GOOGLE_AUTH_URL)
-                        .form(&form)
-                        .send()
-                        .await
-                        .unwrap();
-                    println!("response {:?}", resp);
-                    let res: GoogleResp = resp.json().await.unwrap();
-                    println!("res: {:?}, res", res);
-                    accese_token = res.access_token;
-                    refresh_token = res.refresh_token;
-                }
-                let redirect_uri = Uri::from_str(
-                    format!("watery://accese_token={accese_token}&refresh_token={refresh_token}")
-                        .as_str(),
-                )
-                .unwrap();
-                //Ok(warp::redirect::temporary(redirect_uri))
-                Ok(warp::redirect::temporary(redirect_uri)) as Result<_, warp::Rejection>
-            }
-        });
+//     let callback_route = warp::path("callback")
+//         .and(warp::query::<HashMap<String, String>>())
+//         .and_then(move |params: HashMap<String, String>| {
+//             let proxy = reqwest::Proxy::https("http://127.0.0.1:10006").unwrap();
+//             let client = reqwest::Client::builder().proxy(proxy).build().unwrap();
+//             let mut accese_token = String::new();
+//             let mut refresh_token = String::new();
+//             async move {
 
-    let routes = login_route.or(callback_route);
+//                 Ok(warp::redirect::temporary("aaa")) as Result<_, warp::Rejection>;
+//                 unimplemented!()
+//             }
+//         });
 
-    let (addr, server) =
-        warp::serve(routes).bind_with_graceful_shutdown(([127, 0, 0, 1], PORT), async move {
-            shutdown_rx.recv().await.ok(); // 等待关闭信号
-        });
+//     let routes = login_route.or(callback_route);
 
-    let handle = tokio::task::spawn(server);
+//     let (addr, server) =
+//         warp::serve(routes).bind_with_graceful_shutdown(([127, 0, 0, 1], PORT), async move {
+//             shutdown_rx.recv().await.ok(); // 等待关闭信号
+//         });
 
-    state.server_handle = Some(handle);
-    state.shutdown_tx = Some(shutdown_tx);
-    println!("bind addr {addr} ok...");
-    Ok(())
-}
+//     let handle = tokio::task::spawn(server);
+
+//     state.server_handle = Some(handle);
+//     state.shutdown_tx = Some(shutdown_tx);
+//     println!("bind addr {addr} ok...");
+//     Ok(())
+// }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -145,6 +113,7 @@ pub fn run() {
 
     let cfg = WateryConfig::read_from_file(CONFIG_PATH).unwrap();
     let cfg_state = WateryConfigState::from(cfg);
+    let cfg_state_clone = cfg_state.clone();
 
     let mut app_builder = tauri::Builder::default();
     #[cfg(desktop)]
@@ -155,6 +124,8 @@ pub fn run() {
                 .unwrap();
         }));
     }
+
+    tauri::async_runtime::spawn(local_server(cfg_state_clone));
 
     let log_plugin = tauri_plugin_log::Builder::new()
         .target(tauri_plugin_log::Target::new(
@@ -187,8 +158,7 @@ pub fn run() {
 
             app.deep_link().register("watery")?;
             app.listen("single-instance", |url| {
-                dbg!("--------");
-                dbg!(url);
+                info!("{:?}", url);
             });
             tauri::async_runtime::spawn(async {});
             Ok(())
@@ -196,7 +166,7 @@ pub fn run() {
         .manage(state)
         .manage(oauth2_state)
         .manage(cfg_state)
-        .invoke_handler(tauri::generate_handler![get_provider_link, new_server])
+        .invoke_handler(tauri::generate_handler![get_provider_link])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

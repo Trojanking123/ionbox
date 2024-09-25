@@ -51,6 +51,7 @@ pub struct WateryOauth2Cfg {
 type MyClient =
     BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet>;
 
+#[derive(Clone)]
 pub struct WateryOauth2Client {
     provider: WateryOauth2Provider,
     client: MyClient,
@@ -107,7 +108,7 @@ impl WateryOauth2Client {
 
     // server side only
     pub async fn get_token(
-        &mut self,
+        &self,
         auth_code: String,
         proxy: Option<String>,
         verifier: Option<String>,
@@ -136,8 +137,6 @@ impl WateryOauth2Client {
             .map_err(|_| WateryError::AuthConnectionFailed)?;
 
         let access_token = token_result.access_token();
-        self.access_token = Some(access_token.to_owned());
-        self.refresh_token = token_result.refresh_token().cloned();
         Ok((
             Some(access_token.to_owned()),
             token_result.refresh_token().cloned(),
