@@ -89,7 +89,7 @@ async fn auth(
     let mut app_sate_guard = app_state.lock();
     app_sate_guard.db.remove(state);
     let redirect_url = format!(
-        "watery://access_token={:?}&refresh_token={:?}",
+        "ionbox://access_token={:?}&refresh_token={:?}",
         access_token.unwrap().into_secret(),
         refres_token.unwrap().into_secret()
     );

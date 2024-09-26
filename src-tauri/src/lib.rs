@@ -86,38 +86,39 @@ pub fn run() {
         }));
     }
 
-    tauri::async_runtime::spawn(local_server(cfg_state_clone));
+    
 
-    let log_plugin = tauri_plugin_log::Builder::new()
-        .target(tauri_plugin_log::Target::new(
-            tauri_plugin_log::TargetKind::Stdout,
-        ))
-        .target(tauri_plugin_log::Target::new(
-            tauri_plugin_log::TargetKind::LogDir {
-                file_name: Some("watery.log".to_string()),
-            },
-        ))
-        .level(log::LevelFilter::Trace)
-        .max_file_size(50 * 1024 * 1024 /* bytes */)
-        .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
-        .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-        .build();
+    // let log_plugin = tauri_plugin_log::Builder::new()
+    //     .target(tauri_plugin_log::Target::new(
+    //         tauri_plugin_log::TargetKind::Stdout,
+    //     ))
+    //     .target(tauri_plugin_log::Target::new(
+    //         tauri_plugin_log::TargetKind::LogDir {
+    //             file_name: Some("ionbox.log".to_string()),
+    //         },
+    //     ))
+    //     .level(log::LevelFilter::Trace)
+    //     .max_file_size(50 * 1024 * 1024 /* bytes */)
+    //     .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
+    //     .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+    //     .build();
 
     app_builder
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(log_plugin)
+        //.plugin(log_plugin)
         .setup(|app| {
             // ensure deep links are registered on the system
             // this is useful because AppImages requires additional setup to be available in the system
             // and calling register() makes the deep links immediately available - without any user input
 
-            app.deep_link().register_all()?;
+            app.deep_link().register("ionbox")?;
             app.listen("single-instance", |url| {
+                println!("-----------------");
                 info!("--------------{:?}", url);
             });
 
-            tauri::async_runtime::spawn(async {});
+            tauri::async_runtime::spawn(local_server(cfg_state_clone));
             Ok(())
         })
         .manage(state)

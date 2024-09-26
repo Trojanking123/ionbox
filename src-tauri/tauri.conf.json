@@ -1,7 +1,7 @@
 {
-	"productName": "watery",
+	"productName": "ionbox",
 	"version": "0.1.0",
-	"identifier": "com.watery.app",
+	"identifier": "com.ionbox.app",
 	"build": {
 		"beforeDevCommand": "pnpm dev",
 		"devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
 		"shell": {},
 		"deep-link": {
 			"desktop": {
-				"schemes": ["watery", "mailto", "kkkk", "aaaa"]
+				"schemes": ["ionbox", "mailto", "kkkk", "aaaa"]
 			}
 		}
 	},
@@ -21,7 +21,7 @@
 	"app": {
 		"windows": [
 			{
-				"title": "watery",
+				"title": "ionbox",
 				"width": 800,
 				"height": 600
 			}

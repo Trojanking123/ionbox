@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { invoke } from "@tauri-apps/api/core";
-import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
+//import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { useState } from "react";
 
 import "./styles.css";
@@ -16,9 +16,9 @@ import {
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-onOpenUrl((urls) => {
-	console.log("web deep link:", urls);
-});
+// onOpenUrl((urls) => {
+// 	console.log("web deep link:", urls);
+// });
 
 function App() {
 	const [greetMsg, setGreetMsg] = useState("");

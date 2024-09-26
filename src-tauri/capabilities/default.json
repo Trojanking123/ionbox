@@ -6,9 +6,6 @@
 	"permissions": [
 		"core:app:default",
 		"shell:allow-open",
-		"deep-link:default",
-		"core:event:allow-listen",
-		"core:event:allow-emit",
-		"log:default"
+		"deep-link:default"
 	]
 }
