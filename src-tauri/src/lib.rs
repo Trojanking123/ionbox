@@ -1,11 +1,12 @@
-mod localserver;
-mod oauth2;
 mod ion_config;
 mod ion_const;
 mod ion_error;
 mod ion_states;
+mod localserver;
+mod oauth2;
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use log::info;
 use serde::{Deserialize, Serialize};
@@ -13,16 +14,16 @@ use tauri::Emitter;
 use tauri::Listener;
 use tauri::State;
 use tauri_plugin_deep_link::DeepLinkExt;
-
 use parking_lot::Mutex;
-use std::sync::Arc;
+
 use ion_config::IonConfig;
 
-pub use localserver::*;
-pub use oauth2::*;
+
 pub use ion_const::*;
 pub use ion_error::*;
 pub use ion_states::*;
+pub use localserver::*;
+pub use oauth2::*;
 
 #[derive(Clone, Serialize)]
 struct Payload {
@@ -55,7 +56,6 @@ fn get_provider_link(
     ))
 }
 
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let state = Arc::new(Mutex::new(AppState::default()));
@@ -85,8 +85,6 @@ pub fn run() {
                 .unwrap();
         }));
     }
-
-    
 
     // let log_plugin = tauri_plugin_log::Builder::new()
     //     .target(tauri_plugin_log::Target::new(

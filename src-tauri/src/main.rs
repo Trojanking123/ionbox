@@ -3,7 +3,6 @@
 
 use cfg_aliases::cfg_aliases;
 
-
 fn main() {
     cfg_aliases! {
         desktop: {any(targetos = "linux", targetos = "macos", targetos="windows")},
