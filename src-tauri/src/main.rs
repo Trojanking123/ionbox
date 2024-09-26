@@ -8,5 +8,5 @@ fn main() {
         desktop: {any(targetos = "linux", targetos = "macos", targetos="windows")},
     }
 
-    watery_lib::run()
+    ion_lib::run()
 }

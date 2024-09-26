@@ -25,7 +25,7 @@ impl ToString for IonOauth2Provider {
     }
 }
 
-// 实现 String 到 WateryOauth2Provider 的转换
+// 实现 String 到 IonOauth2Provider 的转换
 impl From<String> for IonOauth2Provider {
     fn from(value: String) -> Self {
         match value.as_str() {
