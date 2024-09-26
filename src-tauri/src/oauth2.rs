@@ -6,39 +6,39 @@ use tauri::Url;
 use oauth2::basic::*;
 use oauth2::*;
 
-use crate::{WateryError, WateryResult};
+use crate::{IonError, IonResult};
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
-pub enum WateryOauth2Provider {
+pub enum IonOauth2Provider {
     Google,
     Outlook,
     Other(String),
 }
 
-impl ToString for WateryOauth2Provider {
+impl ToString for IonOauth2Provider {
     fn to_string(&self) -> String {
         match self {
-            WateryOauth2Provider::Google => "Google".to_string(),
-            WateryOauth2Provider::Outlook => "Outlook".to_string(),
-            WateryOauth2Provider::Other(value) => value.clone(),
+            IonOauth2Provider::Google => "Google".to_string(),
+            IonOauth2Provider::Outlook => "Outlook".to_string(),
+            IonOauth2Provider::Other(value) => value.clone(),
         }
     }
 }
 
 // 实现 String 到 WateryOauth2Provider 的转换
-impl From<String> for WateryOauth2Provider {
+impl From<String> for IonOauth2Provider {
     fn from(value: String) -> Self {
         match value.as_str() {
-            "Google" => WateryOauth2Provider::Google,
-            "Outlook" => WateryOauth2Provider::Outlook,
-            _ => WateryOauth2Provider::Other(value),
+            "Google" => IonOauth2Provider::Google,
+            "Outlook" => IonOauth2Provider::Outlook,
+            _ => IonOauth2Provider::Other(value),
         }
     }
 }
 
 #[derive(Deserialize, Debug)]
-pub struct WateryOauth2Cfg {
-    pub provider: WateryOauth2Provider,
+pub struct IonOauth2Cfg {
+    pub provider: IonOauth2Provider,
     pub client_id: ClientId,
     pub auth_url: AuthUrl,
     pub token_url: TokenUrl,
@@ -52,8 +52,8 @@ type MyClient =
     BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet>;
 
 #[derive(Clone)]
-pub struct WateryOauth2Client {
-    provider: WateryOauth2Provider,
+pub struct IonOauth2Client {
+    provider: IonOauth2Provider,
     client: MyClient,
     scopes: Vec<Scope>,
     csrf: bool,
@@ -61,8 +61,8 @@ pub struct WateryOauth2Client {
     refresh_token: Option<RefreshToken>,
 }
 
-impl From<WateryOauth2Cfg> for WateryOauth2Client {
-    fn from(cfg: WateryOauth2Cfg) -> Self {
+impl From<IonOauth2Cfg> for IonOauth2Client {
+    fn from(cfg: IonOauth2Cfg) -> Self {
         let mut client = BasicClient::new(cfg.client_id)
             .set_auth_uri(cfg.auth_url)
             .set_token_uri(cfg.token_url)
@@ -82,7 +82,7 @@ impl From<WateryOauth2Cfg> for WateryOauth2Client {
     }
 }
 
-impl WateryOauth2Client {
+impl IonOauth2Client {
     // client side only
     pub fn get_auth_url(&mut self) -> (Url, CsrfToken, Option<PkceCodeVerifier>) {
         let mut verifier = None;
@@ -112,7 +112,7 @@ impl WateryOauth2Client {
         auth_code: String,
         proxy: Option<String>,
         verifier: Option<String>,
-    ) -> WateryResult<(Option<AccessToken>, Option<RefreshToken>)> {
+    ) -> IonResult<(Option<AccessToken>, Option<RefreshToken>)> {
         let auth_code = AuthorizationCode::new(auth_code);
         let mut http_client = reqwest::ClientBuilder::new();
         if let Some(proxy) = proxy {
@@ -134,7 +134,7 @@ impl WateryOauth2Client {
         let token_result = client
             .request_async(&http_client)
             .await
-            .map_err(|_| WateryError::AuthConnectionFailed)?;
+            .map_err(|_| IonError::AuthConnectionFailed)?;
 
         let access_token = token_result.access_token();
         Ok((
@@ -172,11 +172,11 @@ impl WateryOauth2Client {
     }
 }
 
-pub fn read_oauth2_provider() -> HashMap<WateryOauth2Provider, WateryOauth2Cfg> {
+pub fn read_oauth2_provider() -> HashMap<IonOauth2Provider, IonOauth2Cfg> {
     let mut oauth2_map = HashMap::new();
     let oauth2_cfg = include_str!("oauth2.json");
-    let oauth2_cfg: Vec<WateryOauth2Cfg> = serde_json::from_str(oauth2_cfg).unwrap();
-    let _: Vec<Option<WateryOauth2Cfg>> = oauth2_cfg
+    let oauth2_cfg: Vec<IonOauth2Cfg> = serde_json::from_str(oauth2_cfg).unwrap();
+    let _: Vec<Option<IonOauth2Cfg>> = oauth2_cfg
         .into_iter()
         .map(|oauth2| oauth2_map.insert(oauth2.provider.clone(), oauth2))
         .collect();
@@ -194,7 +194,7 @@ mod test {
         let result = read_oauth2_provider();
         let client = Oauth2State::from_config(result);
         let mut client = client.lock();
-        let provider: WateryOauth2Provider = "google".to_string().into();
+        let provider: IonOauth2Provider = "google".to_string().into();
         let client = client.get_mut(&provider).unwrap();
         let auth_url = client.get_auth_url();
         dbg!(auth_url);

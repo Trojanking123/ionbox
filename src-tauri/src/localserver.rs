@@ -10,19 +10,19 @@ use axum::{
 use parking_lot::Mutex;
 
 
-struct StateValue(WateryOauth2Provider, Option<String>);
+struct StateValue(IonOauth2Provider, Option<String>);
 
 struct LocalState {
-    config: WateryConfigState,
+    config: IonConfigState,
     client: Oauth2State,
     db: HashMap<String, StateValue>,
 }
 
 use crate::{
-    read_oauth2_provider, Oauth2State, WateryConfigState, WateryOauth2Provider, LOCAL_ADDR,
+    read_oauth2_provider, Oauth2State, IonConfigState, IonOauth2Provider, LOCAL_ADDR,
 };
 
-pub async fn local_server(cfg: WateryConfigState) {
+pub async fn local_server(cfg: IonConfigState) {
     let client = read_oauth2_provider();
     let oauth2_state = Oauth2State::from_config(client);
     let app_state = Arc::new(Mutex::new(LocalState {
@@ -48,8 +48,8 @@ async fn register(
     State(app_state): State<Arc<Mutex<LocalState>>>,
 ) {
     let state = params.get("state").unwrap().to_owned();
-    let provider: WateryOauth2Provider =
-        WateryOauth2Provider::from(params.get("provider").unwrap().to_owned());
+    let provider: IonOauth2Provider =
+        IonOauth2Provider::from(params.get("provider").unwrap().to_owned());
     let veri = params.get("kkk").cloned();
     let value = StateValue(provider, veri);
 

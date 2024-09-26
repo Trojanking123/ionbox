@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Error, Debug, Serialize, Deserialize)]
-pub enum WateryError {
+pub enum IonError {
     #[error("unknown data store error")]
     Unknown,
 
@@ -21,16 +21,16 @@ pub enum WateryError {
     FileIOError(String),
 }
 
-impl From<serde_json::Error> for WateryError {
-    fn from(err: serde_json::Error) -> WateryError {
-        WateryError::SerdeFailed(err.to_string())
+impl From<serde_json::Error> for IonError {
+    fn from(err: serde_json::Error) -> IonError {
+        IonError::SerdeFailed(err.to_string())
     }
 }
 
-impl From<io::Error> for WateryError {
-    fn from(err: io::Error) -> WateryError {
-        WateryError::FileIOError(err.to_string())
+impl From<io::Error> for IonError {
+    fn from(err: io::Error) -> IonError {
+        IonError::FileIOError(err.to_string())
     }
 }
 
-pub type WateryResult<T> = Result<T, WateryError>;
+pub type IonResult<T> = Result<T, IonError>;

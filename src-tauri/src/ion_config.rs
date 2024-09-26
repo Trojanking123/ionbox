@@ -10,30 +10,30 @@ use tauri::Url;
 
 use serde::{Deserialize, Serialize};
 
-use crate::WateryResult;
+use crate::IonResult;
 use crate::DEFAULT_DATA_VERSION;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct WateryConfig {
+pub struct IonConfig {
     data_version: Version,
     pub proxy: Option<Url>,
 }
 
-impl Default for WateryConfig {
+impl Default for IonConfig {
     fn default() -> Self {
-        WateryConfig {
+        IonConfig {
             data_version: DEFAULT_DATA_VERSION,
             proxy: None,
         }
     }
 }
 
-impl WateryConfig {
+impl IonConfig {
     pub fn get_ver(&self) -> &Version {
         &self.data_version
     }
 
-    pub fn read_from_file<P: AsRef<Path>>(file_path: P) -> WateryResult<Self> {
+    pub fn read_from_file<P: AsRef<Path>>(file_path: P) -> IonResult<Self> {
         // 尝试打开文件
         let file = OpenOptions::new().read(true).open(&file_path);
 
@@ -42,13 +42,13 @@ impl WateryConfig {
             Ok(file) => {
                 // 文件存在，读取并解析
                 let reader = BufReader::new(file);
-                let config: WateryConfig = serde_json::from_reader(reader)?;
+                let config: IonConfig = serde_json::from_reader(reader)?;
                 config
             }
             Err(_) => {
                 // 文件不存在或打开失败，创建文件并写入默认配置
                 info!("File not found, creating a new one with default configuration.");
-                let default = WateryConfig::default();
+                let default = IonConfig::default();
 
                 let mut new_file = File::create(&file_path)?;
                 let json = serde_json::to_string_pretty(&default)?;
@@ -59,7 +59,7 @@ impl WateryConfig {
         Ok(config)
     }
 
-    pub fn dump_to_file<P: AsRef<Path>>(&self, file_path: P) -> WateryResult<()> {
+    pub fn dump_to_file<P: AsRef<Path>>(&self, file_path: P) -> IonResult<()> {
         // 尝试打开文件
         let file = OpenOptions::new()
             .read(true)
@@ -84,4 +84,4 @@ impl WateryConfig {
     }
 }
 
-pub type WateryConfigWrap = Arc<RwLock<WateryConfig>>;
+pub type IonConfigWrap = Arc<RwLock<IonConfig>>;

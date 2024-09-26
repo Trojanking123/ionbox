@@ -1,9 +1,9 @@
 mod localserver;
 mod oauth2;
-mod watery_config;
-mod watery_const;
-mod watery_error;
-mod watery_states;
+mod ion_config;
+mod ion_const;
+mod ion_error;
+mod ion_states;
 
 use std::collections::HashMap;
 
@@ -16,13 +16,13 @@ use tauri_plugin_deep_link::DeepLinkExt;
 
 use parking_lot::Mutex;
 use std::sync::Arc;
-use watery_config::WateryConfig;
+use ion_config::IonConfig;
 
 pub use localserver::*;
 pub use oauth2::*;
-pub use watery_const::*;
-pub use watery_error::*;
-pub use watery_states::*;
+pub use ion_const::*;
+pub use ion_error::*;
+pub use ion_states::*;
 
 #[derive(Clone, Serialize)]
 struct Payload {
@@ -43,10 +43,10 @@ struct GoogleResp {
 fn get_provider_link(
     provider: String,
     auth: State<Oauth2State>,
-) -> WateryResult<(String, String, Option<String>)> {
-    let provider: WateryOauth2Provider = provider.into();
+) -> IonResult<(String, String, Option<String>)> {
+    let provider: IonOauth2Provider = provider.into();
     let mut auth = auth.lock();
-    let client = auth.get_mut(&provider).ok_or(WateryError::NoSuchProvider)?;
+    let client = auth.get_mut(&provider).ok_or(IonError::NoSuchProvider)?;
     let (url, csrf_token, veri) = client.get_auth_url();
     Ok((
         url.to_string(),
@@ -63,8 +63,8 @@ pub fn run() {
     let oauth2_cfg = {
         let mut oauth2_map = HashMap::new();
         let oauth2_cfg = include_str!("oauth2.json");
-        let oauth2_cfg: Vec<WateryOauth2Cfg> = serde_json::from_str(oauth2_cfg).unwrap();
-        let _: Vec<Option<WateryOauth2Cfg>> = oauth2_cfg
+        let oauth2_cfg: Vec<IonOauth2Cfg> = serde_json::from_str(oauth2_cfg).unwrap();
+        let _: Vec<Option<IonOauth2Cfg>> = oauth2_cfg
             .into_iter()
             .map(|oauth2| oauth2_map.insert(oauth2.provider.clone(), oauth2))
             .collect();
@@ -72,8 +72,8 @@ pub fn run() {
     };
     let oauth2_state = Oauth2State::from_config(oauth2_cfg);
 
-    let cfg = WateryConfig::read_from_file(CONFIG_PATH).unwrap();
-    let cfg_state = WateryConfigState::from(cfg);
+    let cfg = IonConfig::read_from_file(CONFIG_PATH).unwrap();
+    let cfg_state = IonConfigState::from(cfg);
     let cfg_state_clone = cfg_state.clone();
 
     let mut app_builder = tauri::Builder::default();
