@@ -4,6 +4,7 @@ mod ion_error;
 mod ion_states;
 mod localserver;
 mod oauth2;
+mod commands;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -12,7 +13,6 @@ use log::info;
 use serde::{Deserialize, Serialize};
 use tauri::Emitter;
 use tauri::Listener;
-use tauri::State;
 use tauri_plugin_deep_link::DeepLinkExt;
 use parking_lot::Mutex;
 
@@ -24,6 +24,8 @@ pub use ion_error::*;
 pub use ion_states::*;
 pub use localserver::*;
 pub use oauth2::*;
+
+use commands::get_provider_link;
 
 #[derive(Clone, Serialize)]
 struct Payload {
@@ -40,21 +42,6 @@ struct GoogleResp {
     token_type: String,
 }
 
-#[tauri::command]
-fn get_provider_link(
-    provider: String,
-    auth: State<Oauth2State>,
-) -> IonResult<(String, String, Option<String>)> {
-    let provider: IonOauth2Provider = provider.into();
-    let mut auth = auth.lock();
-    let client = auth.get_mut(&provider).ok_or(IonError::NoSuchProvider)?;
-    let (url, csrf_token, veri) = client.get_auth_url();
-    Ok((
-        url.to_string(),
-        csrf_token.into_secret(),
-        veri.map(|v| v.into_secret()),
-    ))
-}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -86,25 +73,25 @@ pub fn run() {
         }));
     }
 
-    // let log_plugin = tauri_plugin_log::Builder::new()
-    //     .target(tauri_plugin_log::Target::new(
-    //         tauri_plugin_log::TargetKind::Stdout,
-    //     ))
-    //     .target(tauri_plugin_log::Target::new(
-    //         tauri_plugin_log::TargetKind::LogDir {
-    //             file_name: Some("ionbox.log".to_string()),
-    //         },
-    //     ))
-    //     .level(log::LevelFilter::Trace)
-    //     .max_file_size(50 * 1024 * 1024 /* bytes */)
-    //     .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
-    //     .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-    //     .build();
+    let log_plugin = tauri_plugin_log::Builder::new()
+        .target(tauri_plugin_log::Target::new(
+            tauri_plugin_log::TargetKind::Stdout,
+        ))
+        .target(tauri_plugin_log::Target::new(
+            tauri_plugin_log::TargetKind::LogDir {
+                file_name: Some("ionbox.log".to_string()),
+            },
+        ))
+        .level(log::LevelFilter::Trace)
+        .max_file_size(50 * 1024 * 1024 /* bytes */)
+        .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
+        .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+        .build();
 
     app_builder
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
-        //.plugin(log_plugin)
+        .plugin(log_plugin)
         .setup(|app| {
             // ensure deep links are registered on the system
             // this is useful because AppImages requires additional setup to be available in the system

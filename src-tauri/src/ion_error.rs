@@ -19,6 +19,9 @@ pub enum IonError {
 
     #[error("file io error: {0}")]
     FileIOError(String),
+
+    #[error("connect to local server failed: {0}")]
+    LocalServerConnectionError(String),
 }
 
 impl From<serde_json::Error> for IonError {

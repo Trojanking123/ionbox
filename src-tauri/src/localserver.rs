@@ -84,7 +84,7 @@ async fn register(
     let state = params.get("state").unwrap().to_owned();
     let provider: IonOauth2Provider =
         IonOauth2Provider::from(params.get("provider").unwrap().to_owned());
-    let veri = params.get("kkk").cloned();
+    let veri = params.get("verifier").cloned();
     let value = StateValue(provider, veri);
 
     let mut app_sate = app_state.lock();
