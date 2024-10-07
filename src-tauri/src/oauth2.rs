@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 
 use serde::{Deserialize, Serialize};
 use tauri::Url;
@@ -15,12 +16,12 @@ pub enum IonOauth2Provider {
     Other(String),
 }
 
-impl ToString for IonOauth2Provider {
-    fn to_string(&self) -> String {
+impl fmt::Display for IonOauth2Provider {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            IonOauth2Provider::Google => "Google".to_string(),
-            IonOauth2Provider::Outlook => "Outlook".to_string(),
-            IonOauth2Provider::Other(value) => value.clone(),
+            IonOauth2Provider::Google => write!(f, "Google"),
+            IonOauth2Provider::Outlook => write!(f, "Outlook"),
+            IonOauth2Provider::Other(value) => write!(f, "{}", value),
         }
     }
 }
@@ -190,6 +191,7 @@ mod test {
     use super::*;
 
     #[test]
+    #[warn(unused_must_use)]
     fn test_add() {
         let result = read_oauth2_provider();
         let client = Oauth2State::from_config(result);

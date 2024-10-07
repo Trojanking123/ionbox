@@ -1,23 +1,22 @@
+mod commands;
 mod ion_config;
 mod ion_const;
 mod ion_error;
 mod ion_states;
 mod localserver;
 mod oauth2;
-mod commands;
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use log::info;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tauri::Emitter;
 use tauri::Listener;
 use tauri_plugin_deep_link::DeepLinkExt;
-use parking_lot::Mutex;
 
 use ion_config::IonConfig;
-
 
 pub use ion_const::*;
 pub use ion_error::*;
@@ -41,7 +40,6 @@ struct GoogleResp {
     scope: String,
     token_type: String,
 }
-
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

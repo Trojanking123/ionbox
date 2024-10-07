@@ -5,23 +5,26 @@ use thiserror::Error;
 
 #[derive(Error, Debug, Serialize, Deserialize)]
 pub enum IonError {
-    #[error("unknown data store error")]
+    #[error("Unknown data store error")]
     Unknown,
 
-    #[error("we dont have such provider")]
+    #[error("No such provider")]
     NoSuchProvider,
 
-    #[error("connection to auth server failed")]
+    #[error("Connection to auth server failed")]
     AuthConnectionFailed,
 
-    #[error("try to serde failed: {0}")]
+    #[error("Serialization failed: {0}")]
     SerdeFailed(String),
 
-    #[error("file io error: {0}")]
+    #[error("File IO error: {0}")]
     FileIOError(String),
 
-    #[error("connect to local server failed: {0}")]
+    #[error("Connection to local server failed: {0}")]
     LocalServerConnectionError(String),
+
+    #[error("State not found")]
+    StateNotFound,
 }
 
 impl From<serde_json::Error> for IonError {

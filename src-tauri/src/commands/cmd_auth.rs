@@ -1,9 +1,6 @@
 use std::time::Duration;
 
-use backon::BackoffBuilder;
-use backon::ConstantBuilder;
-use backon::ExponentialBuilder;
-use backon::Retryable;
+use backon::{ConstantBuilder, Retryable};
 use reqwest::Client;
 use tauri::{State, Url};
 
@@ -29,10 +26,10 @@ pub fn get_provider_link(
 
 #[tauri::command]
 pub async fn register(state: String, provider: String, verifier: Option<String>) -> IonResult<()> {
-    let url = format!("http://{:?}", LOCAL_ADDR);
-    let mut url = Url::parse(url.as_str()).unwrap();
+    let url = format!("http://{}", LOCAL_ADDR);
+    let mut url = Url::parse(&url).unwrap();
     url.set_path("/register");
-    let mut query_params = format!("state={:?}&provider={:?}", state, provider);
+    let mut query_params = format!("state={}&provider={}", state, provider);
     if let Some(veri) = verifier {
         query_params = format!("{query_params}&verifier={veri}");
     };
@@ -49,12 +46,18 @@ pub async fn register(state: String, provider: String, verifier: Option<String>)
     Ok(())
 }
 
-async fn poll_tokens(clinet: &Client, url: &Url) -> IonResult<Tokens> {
-    let token = clinet
+async fn poll_tokens(client: &Client, url: &Url) -> IonResult<Tokens> {
+    let response = client
         .get(url.as_str())
         .send()
         .await
-        .map_err(|e| IonError::LocalServerConnectionError(e.to_string()))?
+        .map_err(|e| IonError::LocalServerConnectionError(e.to_string()))?;
+
+    if response.status() == reqwest::StatusCode::NOT_FOUND {
+        return Err(IonError::StateNotFound);
+    }
+
+    let token = response
         .json::<Tokens>()
         .await
         .map_err(|e| IonError::LocalServerConnectionError(e.to_string()))?;
@@ -64,21 +67,27 @@ async fn poll_tokens(clinet: &Client, url: &Url) -> IonResult<Tokens> {
 
 #[tauri::command]
 pub async fn poll(state: String) -> IonResult<Tokens> {
-    let url = format!("http://{:?}", LOCAL_ADDR);
-    let mut url = Url::parse(url.as_str()).unwrap();
+    let url = format!("http://{}", LOCAL_ADDR);
+    let mut url = Url::parse(&url).unwrap();
     url.set_path("/tokens");
-    let query_params = format!("state={:?}", state);
+    let query_params = format!("state={}", state);
     url.set_query(Some(&query_params));
 
     let client = reqwest::Client::new();
 
     let backoff = ConstantBuilder::default()
         .with_delay(Duration::from_millis(500))
-        .with_max_times(10);
+        .with_max_times(100);
 
-    let tokens = (|| async { poll_tokens(&client, &url).await })
-        .retry(backoff)
-        .await?;
+    let tokens = (|| async {
+        match poll_tokens(&client, &url).await {
+            Ok(tokens) => Ok(tokens),
+            Err(IonError::StateNotFound) => Err(IonError::StateNotFound),
+            Err(e) => Err(e),
+        }
+    })
+    .retry(backoff)
+    .await?;
 
     Ok(tokens)
 }
