@@ -5,7 +5,7 @@
 		"client_secret": "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",
 		"auth_url": "https://accounts.google.com/o/oauth2/auth",
 		"token_url": "https://oauth2.googleapis.com/token",
-		"redirect_url": "http://localhost:8080/callback",
+		"redirect_url": "http://localhost:50911/callback",
 		"scopes": ["https://mail.google.com"],
 		"csrf": false
 	}

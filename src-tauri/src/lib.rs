@@ -25,7 +25,7 @@ pub use ion_states::*;
 pub use localserver::*;
 pub use oauth2::*;
 
-use commands::get_provider_link;
+use commands::{get_provider_link, poll, register};
 
 #[derive(Clone, Serialize)]
 struct Payload {
@@ -109,7 +109,7 @@ pub fn run() {
         .manage(state)
         .manage(oauth2_state)
         .manage(cfg_state)
-        .invoke_handler(tauri::generate_handler![get_provider_link])
+        .invoke_handler(tauri::generate_handler![get_provider_link, poll, register])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

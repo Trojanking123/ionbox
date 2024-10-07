@@ -2,6 +2,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
 import type React from "react";
 
+type OauthKeys = [string, string, string | null];
+
+async function get_provider_link(provider: string): Promise<OauthKeys> {
+	// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+	const keys: OauthKeys = await invoke("get_provider_link", { provider });
+	return keys;
+}
+
 const OpenLink: React.FC = () => {
 	// 为 url 参数指定类型
 	const openInBrowser = async (url: string): Promise<void> => {
@@ -11,11 +19,12 @@ const OpenLink: React.FC = () => {
 	return (
 		<div>
 			<button
-				onClick={() =>
-					openInBrowser(
-						"https://accounts.google.com/o/oauth2/auth?client_id=632451831672-mfg1ol2lofb8ntf9og1eblkmgc81hv70.apps.googleusercontent.com&redirect_uri=http://localhost:8080/callback&scope=https://mail.google.com&response_type=code",
-					)
-				}
+				type="button"
+				onClick={async () => {
+					const keys: OauthKeys = await get_provider_link("Google");
+					console.log(keys);
+					openInBrowser(keys[0]);
+				}}
 			>
 				Open Outlook in Browser
 			</button>
