@@ -2,6 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
 import type React from "react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type OauthKeys = [string, string, string | null];
 type Tokens = {
@@ -10,7 +12,6 @@ type Tokens = {
 };
 
 async function get_provider_link(provider: string): Promise<OauthKeys> {
-	// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 	const keys: OauthKeys = await invoke("get_provider_link", { provider });
 	return keys;
 }
@@ -28,7 +29,12 @@ async function poll(state: string): Promise<Tokens> {
 	return await invoke("poll", { state });
 }
 
-const OpenLink: React.FC = () => {
+interface OpenLinkProps {
+	provider: string;
+	avatarSrc: string;
+}
+
+const OpenLink: React.FC<OpenLinkProps> = ({ provider, avatarSrc }) => {
 	const [loading, setLoading] = useState(false);
 	const [tokens, setTokens] = useState<Tokens | null>(null);
 
@@ -40,32 +46,36 @@ const OpenLink: React.FC = () => {
 		setLoading(true);
 		setTokens(null);
 		try {
-			const [url, state, verifier] = await get_provider_link("Google");
+			const [url, state, verifier] = await get_provider_link(provider);
 			console.log("Auth URL:", url);
-			await register("Google", state, verifier);
+			await register(provider, state, verifier);
 			await openInBrowser(url);
 
 			const receivedTokens = await poll(state);
 			setTokens(receivedTokens);
 		} catch (error) {
-			console.error("登录过程中出错:", error);
+			console.error(`${provider}登录过程中出错:`, error);
 		} finally {
 			setLoading(false);
 		}
 	};
 
 	return (
-		<div>
-			<button type="button" onClick={handleLogin} disabled={loading}>
-				{loading ? "登录中..." : "使用Google登录"}
-			</button>
+		<div className="flex items-center space-x-1">
+			<Avatar className="rounded-none">
+				<AvatarImage src={avatarSrc} alt={provider} className="object-contain" />
+				<AvatarFallback>{provider}</AvatarFallback>
+			</Avatar>
+			<Button className="w-4/5" onClick={handleLogin} disabled={loading}>
+				{loading ? "登录中..." : `使用${provider}登录`}
+			</Button>
 			{tokens && (
-				<div>
-					<h3>获取的令牌:</h3>
-					<p>访问令牌: {tokens.access_token}</p>
-					<p>刷新令牌: {tokens.refresh_token}</p>
-				</div>
-			)}
+					<div>
+						<h3>获取的令牌:</h3>
+						<p>访问令牌: {tokens.access_token}</p>
+						<p>刷新令牌: {tokens.refresh_token}</p>
+					</div>
+				)}
 		</div>
 	);
 };

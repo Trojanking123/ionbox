@@ -80,7 +80,7 @@ pub fn run() {
                 file_name: Some("ionbox.log".to_string()),
             },
         ))
-        .level(log::LevelFilter::Trace)
+        .level(log::LevelFilter::Debug)
         .max_file_size(50 * 1024 * 1024 /* bytes */)
         .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)

@@ -51,33 +51,14 @@ function App() {
 			<p>{greetMsg}</p>
 			<Card className="mx-auto max-w-sm">
 				<CardHeader>
-					<CardTitle className="text-2xl">Connect Your eMail</CardTitle>
-					<CardDescription>click the link below</CardDescription>
+					<CardTitle className="text-2xl">连接您的电子邮件</CardTitle>
+					<CardDescription>点击下方链接</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div className="grid gap-4">
 						<div className="grid gap-2">
-							<div className="flex items-center space-x-1">
-								<Avatar>
-									<AvatarImage src="https://github.com/shadcn.png" />
-									<AvatarFallback>Google</AvatarFallback>
-								</Avatar>
-								<Button className="w-4/5">
-									<a href="https://www.baidu.com">Google</a>
-								</Button>
-							</div>
-
-							<div className="flex items-center space-x-1">
-								<Avatar>
-									<AvatarImage src="https://github.com/shadcn.png" />
-									<AvatarFallback>Outlook</AvatarFallback>
-								</Avatar>
-								<Button className="w-4/5">
-									<a href="https://www.baidu.com">Outlook</a>
-								</Button>
-							</div>
-
-							<OpenLink />
+							<OpenLink provider="Google"  avatarSrc="google.svg" />
+							<OpenLink provider="Outlook" avatarSrc="outlook.svg"/>
 						</div>
 					</div>
 				</CardContent>
