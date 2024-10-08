@@ -18,11 +18,13 @@
 		"@tauri-apps/api": "2.0.1",
 		"@tauri-apps/plugin-log": "2.0.0",
 		"@tauri-apps/plugin-shell": "2.0.0",
+		"@types/react-router-dom": "^5.3.3",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.1.1",
 		"lucide-react": "^0.439.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
+		"react-router-dom": "^6.26.2",
 		"tailwind-merge": "^2.5.2",
 		"tailwindcss-animate": "^1.0.7"
 	},

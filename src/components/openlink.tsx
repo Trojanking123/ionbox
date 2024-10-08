@@ -63,19 +63,23 @@ const OpenLink: React.FC<OpenLinkProps> = ({ provider, avatarSrc }) => {
 	return (
 		<div className="flex items-center space-x-1">
 			<Avatar className="rounded-none">
-				<AvatarImage src={avatarSrc} alt={provider} className="object-contain" />
+				<AvatarImage
+					src={avatarSrc}
+					alt={provider}
+					className="object-contain"
+				/>
 				<AvatarFallback>{provider}</AvatarFallback>
 			</Avatar>
 			<Button className="w-4/5" onClick={handleLogin} disabled={loading}>
 				{loading ? "登录中..." : `使用${provider}登录`}
 			</Button>
 			{tokens && (
-					<div>
-						<h3>获取的令牌:</h3>
-						<p>访问令牌: {tokens.access_token}</p>
-						<p>刷新令牌: {tokens.refresh_token}</p>
-					</div>
-				)}
+				<div>
+					<h3>获取的令牌:</h3>
+					<p>访问令牌: {tokens.access_token}</p>
+					<p>刷新令牌: {tokens.refresh_token}</p>
+				</div>
+			)}
 		</div>
 	);
 };
