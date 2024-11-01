@@ -4,6 +4,7 @@ mod ion_const;
 mod ion_error;
 mod ion_states;
 mod localserver;
+mod migration;
 mod oauth2;
 
 use std::collections::HashMap;
@@ -22,6 +23,7 @@ pub use ion_const::*;
 pub use ion_error::*;
 pub use ion_states::*;
 pub use localserver::*;
+use migration::*;
 pub use oauth2::*;
 
 use commands::{get_provider_link, poll, register};
@@ -72,9 +74,9 @@ pub fn run() {
     }
 
     let log_plugin = tauri_plugin_log::Builder::new()
-        .target(tauri_plugin_log::Target::new(
-            tauri_plugin_log::TargetKind::Stdout,
-        ))
+        // .target(tauri_plugin_log::Target::new(
+        //     tauri_plugin_log::TargetKind::Stdout,
+        // ))
         .target(tauri_plugin_log::Target::new(
             tauri_plugin_log::TargetKind::LogDir {
                 file_name: Some("ionbox.log".to_string()),
@@ -102,6 +104,7 @@ pub fn run() {
             });
 
             tauri::async_runtime::spawn(local_server(cfg_state_clone));
+            tauri::async_runtime::spawn(refresh_db(r#"sqlite://ionbox.db"#));
             Ok(())
         })
         .manage(state)

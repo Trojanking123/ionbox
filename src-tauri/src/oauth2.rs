@@ -191,7 +191,6 @@ mod test {
     use super::*;
 
     #[test]
-    #[warn(unused_must_use)]
     fn test_add() {
         let result = read_oauth2_provider();
         let client = Oauth2State::from_config(result);
@@ -199,6 +198,6 @@ mod test {
         let provider: IonOauth2Provider = "google".to_string().into();
         let client = client.get_mut(&provider).unwrap();
         let auth_url = client.get_auth_url();
-        dbg!(auth_url);
+        let _ = dbg!(auth_url);
     }
 }
