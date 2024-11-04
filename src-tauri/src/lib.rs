@@ -1,11 +1,13 @@
 mod commands;
-mod ion_config;
-mod ion_const;
-mod ion_error;
-mod ion_states;
-mod localserver;
 mod migration;
-mod oauth2;
+pub mod ion_config;
+pub mod ion_const;
+pub mod ion_error;
+pub mod ion_states;
+pub mod localserver;
+pub mod oauth2;
+pub mod utils;
+pub mod entities;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -18,14 +20,12 @@ use tauri::Listener;
 use tauri_plugin_deep_link::DeepLinkExt;
 
 use ion_config::IonConfig;
-
-pub use ion_const::*;
-pub use ion_error::*;
-pub use ion_states::*;
-pub use localserver::*;
+use ion_const::*;
+use ion_error::*;
+use ion_states::*;
+use localserver::*;
 use migration::*;
-pub use oauth2::*;
-
+use oauth2::*;
 use commands::{get_provider_link, poll, register};
 
 #[derive(Clone, Serialize)]
@@ -103,8 +103,9 @@ pub fn run() {
                 info!("--------------{:?}", url);
             });
 
+            let db_url = utils::get_db_abs_path();
             tauri::async_runtime::spawn(local_server(cfg_state_clone));
-            tauri::async_runtime::spawn(refresh_db(r#"sqlite://ionbox.db"#));
+            tauri::async_runtime::spawn( refresh_db(db_url));
             Ok(())
         })
         .manage(state)

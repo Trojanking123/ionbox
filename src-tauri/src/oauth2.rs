@@ -7,7 +7,7 @@ use tauri::Url;
 use oauth2::basic::*;
 use oauth2::*;
 
-use crate::{IonError, IonResult};
+use crate::ion_error::{IonError, IonResult};
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub enum IonOauth2Provider {

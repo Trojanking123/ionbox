@@ -10,8 +10,8 @@ use tauri::Url;
 
 use serde::{Deserialize, Serialize};
 
-use crate::IonResult;
-use crate::DEFAULT_DATA_VERSION;
+use crate::ion_error::IonResult;
+use crate::ion_const::DEFAULT_DATA_VERSION;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct IonConfig {

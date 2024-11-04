@@ -8,9 +8,9 @@ use tokio::task;
 
 use crate::ion_config::IonConfig;
 use crate::ion_config::IonConfigWrap;
-use crate::IonOauth2Cfg;
-use crate::IonOauth2Client;
-use crate::IonOauth2Provider;
+use crate::oauth2::IonOauth2Cfg;
+use crate::oauth2::IonOauth2Client;
+use crate::oauth2::IonOauth2Provider;
 
 #[derive(Default)]
 pub struct AppState {

@@ -17,30 +17,30 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Oauth2Iden::Table)
+                    .table(Oauth2Record::Table)
                     .col(
-                        ColumnDef::new(Oauth2Iden::Id)
+                        ColumnDef::new(Oauth2Record::Id)
                             .integer()
                             .not_null()
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Oauth2Iden::Provider).string().not_null())
-                    .col(ColumnDef::new(Oauth2Iden::Name).string().not_null())
-                    .col(ColumnDef::new(Oauth2Iden::Email).string().not_null())
-                    .col(ColumnDef::new(Oauth2Iden::AccessToken).string().not_null())
-                    .col(ColumnDef::new(Oauth2Iden::RefreshToken).string().not_null())
+                    .col(ColumnDef::new(Oauth2Record::Provider).string().not_null())
+                    .col(ColumnDef::new(Oauth2Record::Name).string().not_null())
+                    .col(ColumnDef::new(Oauth2Record::Email).string().not_null())
+                    .col(ColumnDef::new(Oauth2Record::AccessToken).string().not_null())
+                    .col(ColumnDef::new(Oauth2Record::RefreshToken).string().not_null())
                     .col(
-                        ColumnDef::new(Oauth2Iden::CreateTime)
+                        ColumnDef::new(Oauth2Record::CreateTime)
                             .date_time()
                             .not_null(),
                     )
                     .col(
-                        ColumnDef::new(Oauth2Iden::UpdateTime)
+                        ColumnDef::new(Oauth2Record::UpdateTime)
                             .date_time()
                             .not_null(),
                     )
-                    .col(ColumnDef::new(Oauth2Iden::ExpierTime).integer().not_null())
+                    .col(ColumnDef::new(Oauth2Record::ExpierTime).integer().not_null())
                     .to_owned(),
             )
             .await
@@ -49,13 +49,13 @@ impl MigrationTrait for Migration {
     // Define how to rollback this migration: Drop the Oauth2Iden table.
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Oauth2Iden::Table).to_owned())
+            .drop_table(Table::drop().table(Oauth2Record::Table).to_owned())
             .await
     }
 }
 
 #[derive(Iden)]
-pub enum Oauth2Iden {
+pub enum Oauth2Record {
     Table,
     Id,
     Name,

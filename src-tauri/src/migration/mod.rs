@@ -14,8 +14,8 @@ impl MigratorTrait for Migrator {
     }
 }
 
-pub async fn refresh_db(db_file: &str) -> IonResult<()> {
-    let db = Database::connect(db_file).await.unwrap();
+pub async fn refresh_db(db_url: String) -> IonResult<()> {
+    let db = Database::connect(db_url).await.unwrap();
     let db = &db;
     Migrator::refresh(db).await.unwrap();
     Ok(())
